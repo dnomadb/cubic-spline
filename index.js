@@ -1,6 +1,45 @@
-module.exports = function spline(x, xs, ys) {
-  var ks = xs.map(function(){return 0})
-  ks = getNaturalKs(xs, ys, ks)
+module.exports = function spline(x, xs, ys, kernel) {
+  var kernelOff = Math.floor((kernel-1)/2) || 1;
+  if (ys[0] === null) {
+    var firstNull = xs[0];
+  }
+  if (ys[ys.length-1] === null) {
+    var lastNull = xs[xs.length-1];
+  }
+  ys.map(function(yVal, i) {
+    if (yVal === null) {
+      xs.splice(i,1);
+      ys.splice(i,1):
+    }
+  });
+  if (firstNull) {
+    xs.unshift(firstNull);
+    ys.unshift(ys[0]);
+  }
+  if (lastNull) {
+    xs.push(lastNull);
+    ys.push(ys[ys.length-1]);
+  }
+  var edges = {};
+  for (var i = 0; i < xs.length; i++) {
+    if (xs[i] > x || i === xs.length-1) {
+      edges.start = i-kernelOff-1;
+      edges.mid = i-1;
+      edges.end = i+(kernelOff-1);
+      break;
+    }
+  }
+  if (edges.start<0) {
+    edges.start = 0;
+  }
+  if (edges.end>xs.length) {
+    edges.end = xs.length;
+  }
+  xs = xs.slice(edges.start,edges.end+1);
+  ys = ys.slice(edges.start,edges.end+1);
+
+  var ks = xs.map(function(){return 0});
+  ks = getNaturalKs(xs, ys, ks);
   var i = 1;
   while(xs[i]<x) i++;
   var t = (x - xs[i-1]) / (xs[i] - xs[i-1]);
@@ -43,7 +82,7 @@ function solve (A, ks) {
     for(var i=k; i<m; i++) if(A[i][k]>vali) { i_max = i; vali = A[i][k];}
     swapRows(A, k, i_max);
     
-    if(A[i_max][i] == 0) console.log("matrix is singular!");
+    if(A[i_max][i] == 0) //console.log("matrix is singular!");
     
     // for all rows below pivot
     for(var i=k+1; i<m; i++)
